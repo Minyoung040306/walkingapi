@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>산책로 관리 시스템 UI</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; padding: 30px; background-color: #f4f6f9; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+
+        .search-container { display: flex; justify-content: space-between; align-items: center; margin: 25px 0; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .search-left { display: flex; gap: 10px; align-items: center; }
+
+        select, input { padding: 10px 15px; font-size: 15px; border: 2px solid #bdc3c7; border-radius: 6px; outline: none; background-color: white; }
+        select:focus, input:focus { border-color: #ffd949; }
+        select { font-weight: bold; color: #2c3e50; cursor: pointer; }
+        .sort-select { border: 2px solid #1a6700; color: #009a05; }
+
+        button { padding: 10px 20px; font-size: 15px; background-color: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #2980b9; }
+        .btn-all { background-color: #2ecc71; }
+        .btn-all:hover { background-color: #27ae60; }
+
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-radius: 8px; overflow: hidden; }
+        th, td { border: 1px solid #eee; padding: 14px 15px; text-align: left; }
+        th { background-color: #2c3e50; color: white; font-weight: bold; }
+
+
+        .clickable-row { cursor: pointer; transition: background 0.2s; }
+        .clickable-row:hover { background-color: #edf2f7 !important; }
+        tr:nth-child(4n+1) { background-color: #f8f9fa; }
+
+
+        .check-mark { color: #ff0000; font-weight: bold; margin-right: 4px; }
+
+
+        .detail-row { display: none; background-color: #fcfcfd !important; }
+        .detail-container { padding: 20px; border: 2px dashed #03a500; border-radius: 6px; margin: 5px 0; background-color: #f7faff; }
+        .detail-grid { display: flex; gap: 40px; margin-bottom: 15px; align-items: center; flex-wrap: wrap; }
+        .info-item { font-size: 15px; color: #2c3e50; }
+        .info-item strong { color: #e67e22; }
+
+
+        .btn-map { background-color: #ffd800; padding: 5px 10px; font-size: 13px; border-radius: 4px; margin-left: 8px; text-decoration: none; color: #002aff; font-weight: bold; display: inline-block; }
+        .btn-map:hover { background-color: #00a142; }
+
+
+        .review-box { background: #fff; padding: 15px; border-radius: 6px; border: 1px solid #dcdde1; margin-top: 15px; }
+        .review-list { margin-top: 10px; padding: 10px; background: #f1f2f6; border-radius: 4px; }
+
+
+        .memo-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid #e1e2e6; font-size: 14px; }
+        .memo-item:last-child { border-bottom: none; }
+        .btn-delete-small { background-color: #e67e22; padding: 3px 8px; font-size: 12px; border-radius: 4px; }
+        .btn-delete-small:hover { background-color: #d35400; }
+
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+        .difficulty-easy { background-color: #e8f5e9; color: #2e7d32; }
+        .difficulty-normal { background-color: #fff3e0; color: #ef6c00; }
+        .difficulty-hard { background-color: #ffebee; color: #c62828; }
+        .region-tag { background-color: #e1f5fe; color: #0288d1; }
+        .star-color { color: #f1c40f; font-weight: bold; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<h1> 산책로 관리 시스템</h1>
+
+<div class="search-container">
+    <div class="search-left">
+        <select id="regionSelect" onchange="changeRegion()">
+            <option value="all">-- 지역 선택 (전체) --</option>
+            <option value="서울">서울특별시</option>
+            <option value="대전">대전광역시</option>
+            <option value="대구">대구광역시</option>
+            <option value="경기">경기도</option>
+            <option value="강원">강원도</option>
+            <option value="충남">충청남도</option>
+            <option value="충북">충청북도</option>
+            <option value="전남">전라남도</option>
+            <option value="전북">전라북도</option>
+            <option value="경남">경상남도</option>
+        </select>
+
+        <select id="memoFilterSelect" onchange="fetchData()">
+            <option value="all">모든 산책로 보기</option>
+            <option value="hasMemo">내가 메모한 코스만 보기</option>
+        </select>
+
+        <input type="text" id="keywordInput" placeholder="동네 이름 또는 키워드 입력" onkeydown="checkEnter(event)">
+        <button onclick="clickSearchButton()">검색</button>
+        <button class="btn-all" onclick="resetAll()"> 초기화</button>
+    </div>
+
+    <div>
+        <select id="sortSelect" class="sort-select" onchange="fetchData()">
+            <option value="none">정렬 선택 안함</option>
+            <option value="difficulty">난이도순 (쉬운 순)</option>
+            <option value="difficulty_desc">난이도순 (어려운 순)</option>
+            <option value="distance">거리순 (단거리 순)</option>
+            <option value="distance_desc">거리순 (장거리 순)</option>
+            <option value="name">이름순 (ㄱ-ㅎ 순)</option>
+        </select>
+    </div>
+</div>
+
+<p style="color: #7f8c8d; font-weight: bold; margin-bottom: 10px;">클릭하여 상세정보 보기</p>
+
+<table>
+    <thead>
+    <tr>
+        <th style="width: 100px;">ID</th>
+        <th style="width: 180px;">동네(테마) 이름</th>
+        <th style="width: 150px;">코스 이름</th>
+        <th>코스 설명</th>
+        <th style="width: 90px;">난이도</th>
+        <th style="width: 90px;">거리</th>
+        <th style="width: 120px;">지역</th>
+    </tr>
+    </thead>
+    <tbody id="walkTableBody">
+    <tr>
+        <td colspan="7" style="text-align: center; color: #888; padding: 30px;">데이터를 불러오는 중입니다...</td>
+    </tr>
+    </tbody>
+</table>
+
+<script>
+    let currentSearchMode = "all";
+    let currentKeyword = "";
+    let rawFetchedData = [];
+
+    function checkEnter(event) {
+        if (event.key === 'Enter') {
+            clickSearchButton();
+        }
+    }
+
+    function renderTable(data) {
+        const tbody = document.getElementById('walkTableBody');
+        tbody.innerHTML = '';
+
+        const memoFilter = document.getElementById('memoFilterSelect').value;
+
+        let filteredData = data;
+        if (memoFilter === "hasMemo") {
+            filteredData = data.filter(walk => {
+                const savedList = localStorage.getItem('memo_list_' + walk.id);
+                return savedList && JSON.parse(savedList).length > 0;
+            });
+        }
+
+        if (!filteredData || filteredData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #e74c3c; font-weight: bold; padding: 30px;">검색 결과가 없습니다. 다시 입력해 주세요!</td></tr>';
+            return;
+        }
+
+        filteredData.forEach(walk => {
+            let diffClass = 'difficulty-normal';
+            if (walk.difficulty === '쉬움' || walk.difficulty === '하' || walk.difficulty === '매우쉬움') diffClass = 'difficulty-easy';
+            if (walk.difficulty === '어려움' || walk.difficulty === '상' || walk.difficulty === '매우어려움') diffClass = 'difficulty-hard';
+
+            const hasWater = (walk.water && walk.water.toLowerCase().startsWith('y')) ? "이용 가능" : " 없음";
+            const hasToilet = (walk.toilet && walk.toilet.toLowerCase().startsWith('y')) ? "이용 가능" : " 없음";
+
+
+            const liveTemp = walk.temperature !== undefined ? walk.temperature + "도" : "정보 없음";
+            const liveRain = walk.rainType || "없음";
+            const liveDust = walk.fineDust || "보통";
+
+            const savedListStr = localStorage.getItem('memo_list_' + walk.id);
+            let memoListHTML = "";
+            let hasSavedMemo = false;
+
+            if (savedListStr) {
+                const memoArray = JSON.parse(savedListStr);
+                if (memoArray.length > 0) {
+                    hasSavedMemo = true;
+                    memoArray.forEach((memo, index) => {
+                        let stars = "★".repeat(memo.stars);
+                        memoListHTML += `
+                            <div class="memo-item">
+                                <div>
+                                    <span class="star-color">${stars}</span> | <span>${memo.text}</span>
+                                </div>
+                                <button class="btn-delete-small" onclick="event.stopPropagation(); deleteIndividualMemo('${walk.id}', ${index})">삭제</button>
+                            </div>`;
+                    });
+                }
+            }
+
+            if (!hasSavedMemo) {
+                memoListHTML = `<div style="color:#aaa; padding:5px;">등록된 메모가 없습니다</div>`;
+            }
+
+            const checkMark = hasSavedMemo ? `<span class="check-mark" id="check-${walk.id}">[∨]</span>` : `<span class="check-mark" id="check-${walk.id}" style="display:none;">[체크]</span>`;
+
+            const mainRow = `<tr id="main-row-${walk.id}" class="clickable-row" onclick="toggleDetail('${walk.id}')">
+                    <td>${checkMark}${walk.id}</td>
+                    <td><strong>${walk.trailName}</strong></td>
+                    <td>${walk.courseName}</td>
+                    <td style="color: #666; font-size: 14px;">${walk.courseDesc}</td>
+                    <td><span class="badge ${diffClass}">${walk.difficulty || '보통'}</span></td>
+                    <td><span style="font-weight: bold; color: #2c3e50;">${walk.courseKm} km</span></td>
+                    <td><span class="badge region-tag">${walk.districtName}</span></td>
+                </tr>`;
+
+
+            const detailRow = `<tr id="detail-${walk.id}" class="detail-row">
+                    <td colspan="7">
+                        <div class="detail-container">
+                            <div class="detail-grid">
+                                <div class="info-item"><strong>음수대 유무:</strong> ${hasWater}</div>
+                                <div class="info-item"><strong>화장실 유무:</strong> ${hasToilet}</div>
+                                <div class="info-item"><strong>실시간 기상 정보:</strong> 현재 기온 ${liveTemp} / 강수: ${liveRain} / 미세먼지: ${liveDust}</div>
+                                <div class="info-item" style="width: 100%;">
+                                    <strong>상세 주소:</strong> ${walk.address}
+                                    <a class="btn-map" href="https://map.kakao.com/?q=${encodeURIComponent(walk.address)}" target="_blank" onclick="event.stopPropagation();">지도 보기</a>
+                                </div>
+                            </div>
+
+                            <div class="review-box">
+                                <strong> 메모 목록</strong>
+                                <div id="review-list-${walk.id}" class="review-list">
+                                    ${memoListHTML}
+                                </div>
+
+                                <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                    <select id="star-input-${walk.id}">
+                                        <option value="5">★★★★★ (5점)</option>
+                                        <option value="4">★★★★ (4점)</option>
+                                        <option value="3">★★★ (3점)</option>
+                                        <option value="2">★★ (2점)</option>
+                                        <option value="1">★ (1점)</option>
+                                    </select>
+                                    <input type="text" id="text-input-${walk.id}" style="flex: 1;" placeholder="메모를 입력하세요">
+                                    <button style="background:#9b59b6;" onclick="saveReview('${walk.id}')">메모 등록</button>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>`;
+
+            tbody.innerHTML += mainRow + detailRow;
+        });
+    }
+
+    function toggleDetail(id) {
+        const detailRow = document.getElementById('detail-' + id);
+        if (detailRow.style.display === 'table-row') {
+            detailRow.style.display = 'none';
+        } else {
+            detailRow.style.display = 'table-row';
+        }
+    }
+
+    function saveReview(id) {
+        const starValue = parseInt(document.getElementById('star-input-' + id).value);
+        const textValue = document.getElementById('text-input-' + id).value.trim();
+
+        if (!textValue) {
+            alert('메모 내용을 입력해 주세요');
+            return;
+        }
+
+        const savedListStr = localStorage.getItem('memo_list_' + id);
+        let memoArray = savedListStr ? JSON.parse(savedListStr) : [];
+
+        memoArray.push({
+            stars: starValue,
+            text: textValue
+        });
+
+        localStorage.setItem('memo_list_' + id, JSON.stringify(memoArray));
+
+        alert('성공적으로 등록되었습니다');
+
+        refreshMemoZone(id);
+
+        document.getElementById('check-' + id).style.display = 'inline';
+        const checkMarkNode = document.getElementById('check-' + id);
+        if(checkMarkNode) {
+            checkMarkNode.innerHTML = '[∨]';
+        }
+        document.getElementById('text-input-' + id).value = '';
+    }
+
+    function deleteIndividualMemo(id, index) {
+        if (confirm('선택한 메모를 삭제하시겠습니까?')) {
+            const savedListStr = localStorage.getItem('memo_list_' + id);
+            if (!savedListStr) return;
+
+            let memoArray = JSON.parse(savedListStr);
+
+            memoArray.splice(index, 1);
+
+            if (memoArray.length === 0) {
+                localStorage.removeItem('memo_list_' + id);
+                document.getElementById('check-' + id).style.display = 'none';
+            } else {
+                localStorage.setItem('memo_list_' + id, JSON.stringify(memoArray));
+            }
+
+            alert('삭제되었습니다');
+
+            refreshMemoZone(id);
+
+            const memoFilter = document.getElementById('memoFilterSelect').value;
+            if (memoFilter === "hasMemo") {
+                renderTable(rawFetchedData);
+            }
+        }
+    }
+
+    function refreshMemoZone(id) {
+        const reviewListZone = document.getElementById('review-list-' + id);
+        const savedListStr = localStorage.getItem('memo_list_' + id);
+        let html = "";
+
+        if (savedListStr) {
+            const memoArray = JSON.parse(savedListStr);
+            if (memoArray.length > 0) {
+                memoArray.forEach((memo, index) => {
+                    let stars = "★".repeat(memo.stars);
+                    html += `
+                        <div class="memo-item">
+                            <div>
+                                <span class="star-color">${stars}</span> | <span>${memo.text}</span>
+                            </div>
+                            <button class="btn-delete-small" onclick="event.stopPropagation(); deleteIndividualMemo('${id}', ${index})">삭제</button>
+                        </div>`;
+                });
+                reviewListZone.innerHTML = html;
+                return;
+            }
+        }
+        reviewListZone.innerHTML = `<div style="color:#aaa; padding:5px;">등록된 메모가 없습니다</div>`;
+    }
+
+    function fetchData() {
+        const sortValue = document.getElementById('sortSelect').value;
+        let url = '/api/walks';
+
+        if (currentSearchMode === "all") {
+            url += `?sort=${sortValue}`;
+        } else {
+            url += `/search?district=${encodeURIComponent(currentKeyword)}&sort=${sortValue}`;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                rawFetchedData = data;
+                renderTable(data);
+            })
+            .catch(err => console.error("데이터 로딩 오류:", err));
+    }
+
+    function changeRegion() {
+        const region = document.getElementById('regionSelect').value;
+        document.getElementById('keywordInput').value = '';
+
+        if (region === 'all') {
+            currentSearchMode = "all";
+            currentKeyword = "";
+        } else {
+            currentSearchMode = "region";
+            currentKeyword = region;
+        }
+        fetchData();
+    }
+
+    function clickSearchButton() {
+        const keyword = document.getElementById('keywordInput').value.trim();
+        document.getElementById('regionSelect').value = 'all';
+
+        if (!keyword) {
+            alert('검색어를 입력해 주세요');
+            return;
+        }
+
+        currentSearchMode = "keyword";
+        currentKeyword = keyword;
+        fetchData();
+    }
+
+    function resetAll() {
+        document.getElementById('regionSelect').value = 'all';
+        document.getElementById('keywordInput').value = '';
+        document.getElementById('sortSelect').value = 'none';
+        document.getElementById('memoFilterSelect').value = 'all';
+        currentSearchMode = "all";
+        currentKeyword = "";
+        fetchData();
+    }
+
+    window.onload = fetchData;
+</script>
+</body>
+</html>
