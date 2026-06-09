@@ -20,7 +20,7 @@ import java.util.Map;
 public class WeatherScheduler {
 
     private final DataSource dataSource;
-    private final String SERVICE_KEY = "e5f7875af79b1843e77fbab7df5827da26169ab3e2795496326c792da19da9f0";
+    private final String SERVICE_KEY = "";
 
     public WeatherScheduler(DataSource dataSource) {
         this.dataSource = dataSource;
