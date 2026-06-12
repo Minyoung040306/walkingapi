@@ -21,12 +21,29 @@ public class WalkController {
         this.dataSource = dataSource;
     }
 
-
     private String getSortSql(String sort) {
-        if (sort.equals("difficulty"))
-            return " ORDER BY CASE w2.difficulty WHEN '매우 쉬움' THEN 1 WHEN '쉬움' THEN 2 WHEN '보통' THEN 3 WHEN '어려움' THEN 4 WHEN '매우 어려움' THEN 5 ELSE 6 END ASC";
-        if (sort.equals("difficulty_desc"))
-            return " ORDER BY CASE w2.difficulty WHEN '매우 어려움' THEN 1 WHEN '어려움' THEN 2 WHEN '보통' THEN 3 WHEN '쉬움' THEN 4 WHEN '매우 쉬움' THEN 5 ELSE 6 END ASC";
+
+        if (sort.equals("difficulty")) {
+            return " ORDER BY CASE "
+                    + "WHEN w2.difficulty IN ('매우 쉬움', '매우쉬움') THEN 1 "
+                    + "WHEN w2.difficulty IN ('쉬움', '하') THEN 2 "
+                    + "WHEN w2.difficulty IN ('보통', '중') THEN 3 "
+                    + "WHEN w2.difficulty IN ('어려움', '상') THEN 4 "
+                    + "WHEN w2.difficulty IN ('매우 어려움', '매우어려움') THEN 5 "
+                    + "ELSE 6 END ASC";
+        }
+
+
+        if (sort.equals("difficulty_desc")) {
+            return " ORDER BY CASE "
+                    + "WHEN w2.difficulty IN ('매우 어려움', '매우어려움') THEN 1 "
+                    + "WHEN w2.difficulty IN ('어려움', '상') THEN 2 "
+                    + "WHEN w2.difficulty IN ('보통', '중') THEN 3 "
+                    + "WHEN w2.difficulty IN ('쉬움', '하') THEN 4 "
+                    + "WHEN w2.difficulty IN ('매우 쉬움', '매우쉬움') THEN 5 "
+                    + "ELSE 6 END ASC";
+        }
+
         if (sort.equals("distance")) return " ORDER BY w2.course_km ASC";
         if (sort.equals("distance_desc")) return " ORDER BY w2.course_km DESC";
         if (sort.equals("name")) return " ORDER BY w1.trail_name ASC";
@@ -87,7 +104,7 @@ public class WalkController {
         return walkList;
     }
 
-    // 코드 중복 방지를 위한 헬퍼 메서드
+
     private Map<String, Object> mapRowToWalk(ResultSet rs) throws Exception {
         Map<String, Object> walk = new HashMap<>();
         walk.put("id", rs.getString("id"));
